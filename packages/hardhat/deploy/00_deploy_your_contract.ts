@@ -2,12 +2,11 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { Contract } from "ethers";
 
-// Update with your Batch number
-const BATCH_NUMBER = "13";
+// BatchRegistry contract address on Optimism
+const BATCH_REGISTRY_ADDRESS = "0xcF4ac52079F69C93904e2A4a379cAd1F0C8dA0A9";
 
 /**
- * Deploys a contract named "deployYourContract" using the deployer account and
- * constructor arguments set to the deployer address
+ * Deploys your CheckIn contract using the deployer account
  *
  * @param hre HardhatRuntimeEnvironment object.
  */
@@ -15,7 +14,7 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
   /*
     On localhost, the deployer account is the one that comes with Hardhat, which is already funded.
 
-    When deploying to live networks (e.g `yarn deploy --network sepolia`), the deployer account
+    When deploying to live networks (e.g `yarn deploy --network optimism`), the deployer account
     should have sufficient balance to pay for the gas fees for contract creation.
 
     You can generate a random account with `yarn generate` or `yarn account:import` to import your
@@ -25,28 +24,27 @@ const deployYourContract: DeployFunction = async function (hre: HardhatRuntimeEn
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
 
-  await deploy("BatchRegistry", {
+  // Only deploy CheckIn contract
+  await deploy("CheckIn", {
     from: deployer,
-    // Contract constructor arguments
-    args: [deployer, BATCH_NUMBER],
+    args: [BATCH_REGISTRY_ADDRESS, deployer], // Pass BatchRegistry address and make deployer the owner
     log: true,
     // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
     // automatically mining the contract deployment transaction. There is no effect on live networks.
     autoMine: true,
   });
 
-  // Get the deployed contract to interact with it after deploying.
-  const batchRegistry = await hre.ethers.getContract<Contract>("BatchRegistry", deployer);
-  console.log("\nBatchRegistry deployed to:", await batchRegistry.getAddress());
-  console.log("Remember to update the allow list!\n");
+  // Get the deployed contract
+  const checkIn = await hre.ethers.getContract<Contract>("CheckIn", deployer);
 
-  // The GraduationNFT contract is deployed on the BatchRegistry constructor.
-  const batchGraduationNFTAddress = await batchRegistry.batchGraduationNFT();
-  console.log("BatchGraduation NFT deployed to:", batchGraduationNFTAddress, "\n");
+  console.log("\nCheckIn deployed to:", await checkIn.getAddress());
+  console.log("\nNext steps:");
+  console.log("1. Call CheckIn.checkInToBatch() to register your contract");
+  console.log("2. Wait for graduation allowlist to be updated\n");
 };
 
 export default deployYourContract;
 
 // Tags are useful if you have multiple deploy files and only want to run one of them.
-// e.g. yarn deploy --tags YourContract
-deployYourContract.tags = ["BatchRegistry"];
+// e.g. yarn deploy --tags CheckIn
+deployYourContract.tags = ["CheckIn"];
